@@ -289,7 +289,7 @@ function completeDFA(automata) {
     var edges = automata.edges;
     var nodes = automata.nodes;
     var last;
-
+    console.log(nodes);
     // Подготавливаем nodesInfo и заодно вычисляем имя новой вершины
     var hasStart = false, hasFinish = false;
     for (var i in nodes) {
@@ -331,11 +331,16 @@ function completeDFA(automata) {
     // Формируем nodesInfo и проверяем, что автомат является DFA
     var alphabet = automata.getAlphabet();
     for (var i=0; i < edges.length; i++) {
+        console.log("edges[i]");
+        console.log(edges[i]);
+        console.log("nodesInfo");
+        console.log(nodesInfo);
         var from = edges[i].source, to = edges[i].target;
         var label = edges[i].label;
-        if (label == "$" || nodesInfo[from].to[label])
+        if (label == "$" || nodesInfo[from].to[label]){
+            alert("Automata is not DFA");
             throw new Error("Automata is not DFA");
-
+        }
         nodesInfo[from].to[label] = to;
         nodesInfo[to].from.push(from);
     }
@@ -372,7 +377,7 @@ function completeDFA(automata) {
     };
 }
 
-function minDFA(automata) {
+window.minDFA = function (automata) {
     var groups = [[], []];
     var info = completeDFA(automata);
     var alphabet = info.alphabet;

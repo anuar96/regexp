@@ -27,7 +27,7 @@
         }
         #frame {
             width: 100%;
-            height: 99%;
+            height: 160%;
         }
         #frame tr {
             height: 0px;
@@ -39,15 +39,28 @@
             width: 100%;
             height: 100%;
         }
+        #automata_output {
+            border: 1px solid #d3d3d3;
+            font-family: Consolas;
+            font-size: 11pt;
+            width: 100%;
+            height: 100%;
+        }
         input.regedit {
             font-family: Consolas;
             font-size: 11pt;
             width: 100%;
         }
-        #mynetwork {
+        #mynetwork_input {
             float: left;
             width: 100%;
-            height: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+        #mynetwork_output {
+            float: left;
+            width: 100%;
+            height: 400px;
             overflow: hidden;
         }
     </style>
@@ -70,8 +83,8 @@
                 <tr>
                     <td align="right">RegExp:</td><td width="100%"><input class="regedit" id="regex_input" type="edit" value=""></input></td>
                 </tr>
-                <tr>
                     <td align="right">Output:</td><td width="100%"><input class="regedit" id="regex_output" type="edit" value="" disabled></input></td>
+                <tr>
                 </tr>
             </table>
             <button id="button_optimize">Optimize</button>
@@ -81,6 +94,7 @@
             <button id="button_atoreg">&uarr;</button>
             <button id="button_opt1">DFA</button>
             <button id="button_opt2">DFA &darr;</button>
+            <button id="button_minimizeDFA">minimize DFA</button>
         </td>
         <td>
             <table style="height:0px; width: 100%">
@@ -118,9 +132,34 @@
             <textarea id="automata_input"></textarea>
         </td>
         <td>
-            <div id="mynetwork"></div>
+            <div id="mynetwork_input"></div>
         </td>
     </tr>
+    <tr style="height: 100%">
+        <td>
+            <textarea id="automata_output"></textarea>
+        </td>
+        <td>
+            <div id="mynetwork_output"></div>
+        </td>
+    </tr>
+
+    <!--<tr style="height: 100%">
+        <td>
+            <textarea id="automata_input"></textarea>
+        </td>
+        <td>
+            <textarea id="automata_output"></textarea>
+        </td>
+    </tr>
+    <tr style="height: 160%">
+        <td>
+            <div id="mynetwork_input"></div>
+        </td>
+        <td>
+            <div id="mynetwork_output"></div>
+        </td>
+    </tr>-->
 </table>
 
 <script type="text/javascript">
@@ -130,19 +169,17 @@
     window.onresize = function () {
         setTimeout(draw, 500);
     };
-
     // parse and draw the data
-    function draw (txtData) {
+    function draw (mynetwork,txtData) {
         //return;
         if (txtData != undefined) {
             data = {
               dot: txtData
             };
         }
-
         Math.seedrandom("123");
         try {
-            network = new vis.Network($('#mynetwork')[0], data, {
+            network = new vis.Network(mynetwork, data, {
                 //smoothCurves: { dynamic: false, type: "diagonalCross", roundness: 0.5 },
                 physics: {
                     barnesHut: {// gravitationalConstant:0, springConstant:0, centralGravity: 0
@@ -166,8 +203,5 @@
 
     window.drawNetwork = draw;
 </script>
-
 </body>
-
-
 </html>

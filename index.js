@@ -1,6 +1,5 @@
 (function () {
     "use strict";
-    var timer = null;
     function dbgout(s) {
         try {
             console.log(s);
@@ -48,6 +47,7 @@
         saveItem("regex_result");
         saveItem("regex_alpha");
         saveItem("automata_input");
+        saveItem("automata_output");
     }
 
     function load() {
@@ -58,6 +58,7 @@
         loadItem("regex_result" );
         loadItem("regex_alpha", "a, b, c");
         loadItem("automata_input", "^start\nfinish^\nstart, 1\n1, 2, c\n2, 3\n3, 5\n5, 5, a\n5, 4\n4, 3, b\n3, 1\n1, finish");
+        loadItem("automata_output", "^start\nfinish^\nstart, 1\n1, 2, c\n2, 3\n3, 5\n5, 5, a\n5, 4\n4, 3, b\n3, 1\n1, finish");
     }
     
     function compat() {
@@ -110,13 +111,10 @@
         }
     }
     
-    function draw(text) {
+    function drawinput(text) {
         //return;
-        timer = null;
-
         if (text == undefined)
             text = $("#automata_input")[0].value;
-
         var auto;
         try {
             auto = new Automata(text);
@@ -164,7 +162,65 @@
 
         network += "}";
         try {
-            drawNetwork(network);
+
+            drawNetwork($('#mynetwork_input')[0],network);    
+        }
+        catch (e) {
+        }
+    }
+    function drawoutput(text) {
+        //return;
+        if (text == undefined)
+            text = $("#automata_output")[0].value;
+        console.log(text);
+        var auto;
+        try {
+            auto = new Automata(text);
+        } catch (e) {
+            return;
+        }
+
+        var network =
+            'digraph {\n' + 
+            'node [shape=circle fontSize=16]\n' +
+            'edge [length=100, color=gray, fontColor=black]\n';
+
+        var cycle = {};
+        for (var i in auto.edges) {
+            var e = auto.edges[i];
+            if (e.source == e.target) {
+                if (!cycle[e.source])
+                    cycle[e.source] = [];
+                cycle[e.source].push(e.label);
+
+                continue;
+            }
+
+            network += '"' + e.source + '" -> "' + e.target + '"';
+            if (e.label != "$")
+                network += '[label="' + e.label + '"]';
+            network += ";\n";
+        }
+        for (var i in cycle) {
+            network += '"' + i + '" -> "' + i + '"';
+            network += '[label="' + cycle[i].sort() + '"];\n';
+        }
+
+        for (var i in auto.nodes) {
+            var n = auto.nodes[i];
+            if (!n.isStart && !n.isFinish)
+                continue;
+            network += '"' + n.name + '"[';
+            if (n.isStart)
+                network += "fontColor=white, color=green, level=0, ";
+            if (n.isFinish)
+                network += "shape=box, radius=0,";
+            network += "];\n";
+        }
+
+        network += "}";
+        try {
+            drawNetwork($('#mynetwork_output')[0],network);
         }
         catch (e) {
         }
@@ -175,12 +231,15 @@
         $("#button_save").bind("click", function () { save(); });
         $("#button_load").bind("click", function () { load(); });
         $("#button_test").bind("click", function () { Test.runTest(); });
-        
+        $("#button_minimizeDFA").bind("click",function () {
+          $("#automata_output")[0].value = minDFA((new Automata()).fromText($("#automata_input")[0].value));
+        })
         $("#button_copy").bind("click", function () {
             $("#regex_input")[0].value = $("#regex_output")[0].value;
         });
         $("#button_optimize").bind("click", function () {
             var r = $("#regex_input")[0].value;
+            console.log($("#regex_input")[0]);
             $("#regex_output")[0].value = 
                 new Tree(r).normalize().optimize2()
                     .normalize().toString();
@@ -203,13 +262,15 @@
         $("#button_regtoa").bind("click", function () {
             var r = $("#regex_input")[0].value;
             $("#automata_input")[0].value = (new Tree(r))./*optimize().*/toAutomata().toString();
-            draw();
+            drawinput();
         });
         $("#automata_input").bind("input propertychange", function () {
-            if (timer)
-                return;
-            timer = setTimeout(draw, 500);
+            setTimeout(drawinput(), 500);
         });
+        $("#automata_output").bind("input propertychange", function () {
+            setTimeout(drawoutput(), 500);
+        });
+
 
         // Optional buttons:
         $("#button_opt1").bind("click", function () {
@@ -222,7 +283,7 @@
             var dfa = DFA(r);
             dfa.getUsedNodes();
             $("#automata_input")[0].value = dfa+"";
-            draw();
+            drawinput();
         });
 
         $("#button_inter").bind("click", function () {
@@ -269,7 +330,8 @@
         }
         window.T = function (r) { return new Tree(r); };
 
-        draw();
+        drawinput();
+        drawoutput();
     }
 
     $(document).ready(function() { init(); });
