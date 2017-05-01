@@ -698,7 +698,7 @@ Automata.prototype.minimizeAutomata = function(){
 //	this.reverseAutomata().getDFAbyNFA().myreverse().getDFAbyNFA();
 //	(new Automata()).fromText($("#automata_input")[0].value);
 //	console.log(this.reverseAutomata());
-	return renameStates((new Automata()).fromText(this.reverseAutomata().getDFAbyNFA()).reverseAutomata().getDFAbyNFA());
+	return (new Automata()).fromText(this.reverseAutomata().getDFAbyNFA()).reverseAutomata().getDFAbyNFA();
 }
 function renameStates(text){
 	text = text.replace(/[ \t\r]/g, "");
