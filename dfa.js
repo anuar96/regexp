@@ -372,7 +372,6 @@ function completeDFA(automata) {
         alphabet: alphabet
     };
 }
-
 window.minDFA = function (automata) {
     var groups = [[], []];
     var info = completeDFA(automata);

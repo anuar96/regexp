@@ -651,18 +651,9 @@ function toMyString (Q) {
 	result = result.substring(0, result.length-1);
 	return result;
 };
-Automata.prototype.delta = function(state,symbol,qd){
-	for (var i = 0; i < this.edges.length; i++){
-		if (this.edges[i].source == state){
-			if (this.edges[i].label == symbol){
-				qd.add(this.edges[i].target);
-			}
-		}
-	}
-	return;
-}
+
 Automata.prototype.reverseAutomata = function(){
-	console.log(this);
+//	console.log(this);
 	for (var i = 0; i < this.edges.length; i++){
 		var t = this.edges[i].source;
 		this.edges[i].source = this.edges[i].target;
@@ -708,6 +699,9 @@ function renameStates(text){
 	used.add("start");
 	used.add("finish");
 	var newState = (Math.max.apply( Math, text.match(/\d+/g)) + 1).toString();
+	if (newState == NaN || newState == Infinity || newState == -Infinity){
+		newState = 0;
+	}
 	for (var i = 2; i < lines.length; i++){
 		var args = lines[i].split("#")[0].split(",");
 		if (args.length == 0)
@@ -715,20 +709,29 @@ function renameStates(text){
 		for (var k=0; k < 2; k++){
 			if (used.has(args[k]))
 				continue;
-			console.log(args[k]);
-			console.log(newState);
-			console.log(text);
-			text = text.replace(new RegExp (args[k]+"[;,]",'gi'),newState+',');
+			text = text.replace(new RegExp (args[k]+',','gi'),newState+',');
 //			text = text.replace(new RegExp (args[k]+"[^\w\d]",'gi'),newState+',');
 //			text = strr(args[k],newState,"","");
-			console.log(text);			
 			used.add(args[k]);
 			newState = (parseInt(newState)+1).toString();
 		}
 	}
+	console.log(text);
+//	console.log(/,$\n/.test(text));
+//	text = text.replace(/,$\n/gi,"\n");
+//	text = text.replace(new RegExp(",$", "g"),"");
 	return text;
 }
-
+Automata.prototype.delta = function(state,symbol,qd){
+	for (var i = 0; i < this.edges.length; i++){
+		if (this.edges[i].source == state){
+			if (this.edges[i].label == symbol){
+				qd.add(this.edges[i].target);
+			}
+		}
+	}
+	return;
+}
 Automata.prototype.getDFAbyNFA = function(){
 	var setOfStates = [];
 	setOfStates = [["start"]];
