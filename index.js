@@ -168,10 +168,6 @@
         catch (e) {
         }
     }
-    function addStartState(text){
-        var res = "start," + text[1] +"\n"+ text[4] + ",finish"+"\n" + text;
-        return res;
-    }
     function drawoutput(text) {
         //return;
         if (text == undefined)
@@ -228,6 +224,31 @@
         catch (e) {
         }
     }
+function renameStates(text){
+	text = text.replace(/[ \t\r]/g, "");
+	var lines = text.split("\n");
+	text = text.replace(/\n/g, ",$\n");
+	var used = new Set();
+	used.add("start");
+	used.add("finish");
+	var newState = ((Math.max.apply( Math, text.match(/\d+/g)) + 1) % 99).toString();
+	for (var i = 2; i < lines.length; i++){
+		var args = lines[i].split("#")[0].split(",");
+		if (args.length == 0)
+			continue;
+		for (var k=0; k < 2; k++){
+			if (used.has(args[k]))
+				continue;
+			text = text.replace(new RegExp (args[k]+"[;,]",'gi'),newState + ',');
+//			text = text.replace(new RegExp (args[k]+"[^\w\d]",'gi'),newState+',');
+//			text = strr(args[k],newState,"","");
+
+			used.add(args[k]);
+			newState = (parseInt(newState) + 1).toString();
+		}
+	}
+	return text;
+}
     function init() {
         load();
         $("#button_save").bind("click", function () { save(); });
@@ -235,21 +256,32 @@
         $("#button_test").bind("click", function () { Test.runTest(); });
         $("#button_minimizeDFA").bind("click",function () {
             var automam = (new Automata()).fromText($("#automata_input")[0].value);
-            $("#automata_output")[0].value = automam.minimizeAutomata();
+//            $("#automata_output")[0].value = renameStates($("#automata_input")[0].value);
+//            $("#automata_output")[0].value = automam.reverseAutomata().toString();
+//            console.log(automam);
+            $("#automata_output")[0].value = renameStates(automam.minimizeAutomata());
             drawoutput();
-        })
+        });
         $("#button_getDFAbyNFA").bind("click",function () {
             var automam = (new Automata()).fromText($("#automata_input")[0].value);
             automam = automam.getDFAbyNFA();
+            console.log(automam);
             $("#automata_output")[0].value = automam;
           drawoutput();  
-         })
+         });
          $("#button_reverseNFA").bind("click",function () {
             var automam = (new Automata()).fromText($("#automata_input")[0].value);
             automam = automam.reverseAutomata().toString();
             $("#automata_output")[0].value = automam;
           drawoutput();  
-         })       
+         });
+         $("#button_equalDFAS").bind("click", function () {
+            var automam = (new Automata()).fromText($("#automata_input")[0].value);
+            console.log(automam);
+//            var automam22 = (new Automata()).fromText($("#automata_output")[0].value);
+            table($("#automata_input")[0].value);
+//            $("#regex_result")[0].value = equaldfas(automam,automam22)+"";
+        });
         $("#button_copy").bind("click", function () {
             $("#regex_input")[0].value = $("#regex_output")[0].value;
         });
@@ -297,9 +329,8 @@
             var r = $("#regex_input")[0].value;
             var dfa = DFA(r);
             dfa.getUsedNodes();
-            dfa = addStartState(dfa+"");
-            $("#automata_output")[0].value = dfa+"";
-            drawoutput();
+            $("#automata_input")[0].value = dfa+"";
+            drawinput();
         });
 
         $("#button_inter").bind("click", function () {
@@ -327,6 +358,8 @@
             var r2 = $("#regex_r2")[0].value;
             $("#regex_result")[0].value = equal(r1, r2)+"";
         });
+
+
 
         $("#button_not")  .bind("click", function () {
             var a = getval("regex_alpha").replace(/[, \t\r]/g, "");

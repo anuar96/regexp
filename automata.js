@@ -561,12 +561,10 @@ Automata.prototype.addEdge = function (source, target, label) {
 	source = this.makeNode(source).name;
 	target = this.makeNode(target).name;
 	this.alphabet = "";
-
 	this.start = null;
 	var edge, edges = this.edges;
 	for (var i=0; i < edges.length; i++) {
 		var e = edges[i];
-
 		if (e.source == source && e.target == target && 
 			e.label == label) {
 			edge = e;
@@ -633,10 +631,31 @@ Automata.prototype.fromText = function(text) {
 //	console.log(JSON.stringify(this.alphabet));	
 	return this;
 };
+// Automata.prototype.fromText = function(text) {
+// 	text = text.replace(/[ \t\r]/g, "");
+// 	var lines = text.split("\n");
+// 	this.edges = [];
+// 	this.nodes = {};
+// 	for (var i=0; i < lines.length; i++) {
+// 		var args = lines[i].split(",");
+// 		// console.log(args);
+// 		if (args.length == 0)
+// 			continue;
+// 		else if (args.length < 2) {
+// 			if (args[0] != "")
+// 				this.makeNode(args[0]);
+// 			continue;
+// 		}
+// 		this.addEdge(args[0], args[1], args[2]);
+// 	}
+// //	this.setAlphabet(this.getAlphabet);
+// //	console.log(JSON.stringify(this.alphabet));	
+// 	return this;
+// };
 function toMyString (Q) {
 	//this.getUsedNodes(); // remove unused edges
 	var result = "^start" + "\n" + "finish^" + "\n";
-	for (var i=0; i < Q.length; i++) {
+	for (var i = 0; i < Q.length; i++) {
 		let array = Array.from(Q[i].source);
 		array.sort();
 		var src = array.toString().replace( /,/g, "" );
@@ -649,11 +668,21 @@ function toMyString (Q) {
 		result += "\n";
 	}
 	result = result.substring(0, result.length-1);
+	var arr = $.unique(result.split('\n'));
+	result = arr.join("\n");
 	return result;
 };
-
+Automata.prototype.delta = function(state,symbol,qd){
+	for (var i = 0; i < this.edges.length; i++){
+		if (this.edges[i].source == state){
+			if (this.edges[i].label == symbol){
+				qd.add(this.edges[i].target);
+			}
+		}
+	}
+	return;
+}
 Automata.prototype.reverseAutomata = function(){
-//	console.log(this);
 	for (var i = 0; i < this.edges.length; i++){
 		var t = this.edges[i].source;
 		this.edges[i].source = this.edges[i].target;
@@ -699,9 +728,6 @@ function renameStates(text){
 	used.add("start");
 	used.add("finish");
 	var newState = (Math.max.apply( Math, text.match(/\d+/g)) + 1).toString();
-	if (newState == NaN || newState == Infinity || newState == -Infinity){
-		newState = 0;
-	}
 	for (var i = 2; i < lines.length; i++){
 		var args = lines[i].split("#")[0].split(",");
 		if (args.length == 0)
@@ -709,28 +735,82 @@ function renameStates(text){
 		for (var k=0; k < 2; k++){
 			if (used.has(args[k]))
 				continue;
-			text = text.replace(new RegExp (args[k]+',','gi'),newState+',');
-//			text = text.replace(new RegExp (args[k]+"[^\w\d]",'gi'),newState+',');
-//			text = strr(args[k],newState,"","");
+			text = text.replace(new RegExp (args[k]+"[;,]",'gi'),newState+',');
 			used.add(args[k]);
 			newState = (parseInt(newState)+1).toString();
 		}
 	}
-	console.log(text);
-//	console.log(/,$\n/.test(text));
-//	text = text.replace(/,$\n/gi,"\n");
-//	text = text.replace(new RegExp(",$", "g"),"");
 	return text;
 }
-Automata.prototype.delta = function(state,symbol,qd){
+Automata.prototype.mdelta = function(state,symbol){
 	for (var i = 0; i < this.edges.length; i++){
 		if (this.edges[i].source == state){
 			if (this.edges[i].label == symbol){
-				qd.add(this.edges[i].target);
+				return this.edges[i].target;
 			}
 		}
 	}
-	return;
+	return null;
+}
+function finish(a,u){
+	if (u){
+		return a.nodes[u].isFinish;
+	}
+	return 0;
+}
+function equaldfas(a,b){
+	a = a.minimizeAutomata();
+	b = b.minimizeAutomata();
+	a = (new Automata()).fromText(a);
+	b = (new Automata()).fromText(b);
+	var Queue = ["start","start"];
+
+	var u;
+	var v;
+	var qd2, qd1,used1,used2;
+	var node;
+	used1 = [];
+	used2 = [];
+	for (node in a.nodes){
+		used1[a.nodes[node].name] = false;
+	}
+	for (node in b.nodes){
+		used2[b.nodes[node].name] = false;
+	}
+
+	while(Queue.length){
+		u = Queue.pop();
+		v = Queue.pop();
+
+		// if (u && v || !u && !v)
+		if ((finish(a,u) && !(finish(b,v))) || (!finish(a,u) && finish(b,v)))
+			return 0;
+
+		// if ((a.nodes[u].isFinish && !(b.nodes[v].isFinish)) || (!a.nodes[u].isFinish && b.nodes[v].isFinish))
+		// 	return 0;
+		used1[u] = true;
+		used2[v] = true;
+		var alph = a.getAlphabet() + "$";
+//		alph.push("$");
+		for (let c of alph){
+			qd1 = null;
+			qd2 = null;
+			qd1 = a.mdelta(u,c);
+			qd2 = b.mdelta(v,c);
+
+			if (qd1 && !qd2 || !qd1 && qd2)
+				return 0;
+			if(used1[qd1] && !used2[qd2] || !used1[qd1] && used2[qd2])
+				return 0;
+			if (!used1[qd1] || !used2[qd2]){
+				if (qd1 || qd2){
+					Queue.push(qd2);
+					Queue.push(qd1);
+				}
+			}
+		}
+	}
+	return 1;
 }
 Automata.prototype.getDFAbyNFA = function(){
 	var setOfStates = [];
@@ -738,7 +818,6 @@ Automata.prototype.getDFAbyNFA = function(){
 	var Q = [];
 	var alphabet = this.getAlphabet()+"$";
 	while (setOfStates.length){
-//	for (var i = 0; i < 5; i++){
 		var pd = new Set(setOfStates.pop());
 		for (var k = 0; k < alphabet.length; k++){
 			var c = alphabet.charAt(k);
@@ -767,7 +846,7 @@ Automata.prototype.getDFAbyNFA = function(){
 function eqSet(firstset,secondset){
 	if ((set1inset2(firstset,secondset)) && (set1inset2 (secondset, firstset))){
 		return true;
-	}	
+	}
 	else return false;
 }
 function set1inset2(firstset,secondset){
@@ -779,6 +858,105 @@ function set1inset2(firstset,secondset){
 	});
 	return flag;
 }
+String.prototype.deleteWord = function (searchTerm) {
+    var str = this;
+    var n = str.search(searchTerm);
+    while (str.search(searchTerm) > -1) {
+        n = str.search(searchTerm);
+        str = str.substring(0, n) + str.substring(n + searchTerm.length, str.length);
+    }
+    return str;
+}
+function deletestates(text,states){
+	var state;
+	var postrokam = text.split('\n');
+	postrokam.shift();
+	postrokam.shift();
+	var result,i,j;
+	var deleteme;
+	result = "";
+	postrokam.forEach(function(item,i,postrokam){
+		var reg = /^(\d+),(\d+),\w$/;
+		deleteme = 0;
+		if (!item){
+			return result;
+		}
+		for (j = 0; j < states.length; j++){
+			var reg = /^(\d+),(\d+),\w$/;
+			var mas = item.match(reg);
+			if (mas == null){
+				reg = /^start,(\d+)$/;
+				mas = item.match(reg);
+				if (mas == null){
+					reg = /^(\d+),finish$/;
+					mas = item.match(reg);
+				}
+			}
+			for (let k = 1; k < mas.length; k++){
+				if (mas[k] === states[j]){
+					deleteme = 1;
+				}
+			}
+		}
+		if (!deleteme){
+			if (item){
+				result += item + "\n";
+			}
+		}
+	});
+	return result;
+}
+function table(coml){
+	var states = ['2','4','7','9','11','13','14'];
+	var dopstates = ['1','3','5','8','10','12'];
+	var newstates = [];
+	var dvoich,generated,generatedauto;
+	var table = '';
+//	var comlauto = (new Automata()).fromText(coml);
+	for (let i = 128; i < 256; i++){
+		dvoich = (i).toString(2);
+		// console.log(dvoich);
+		for (let z = 1; z < dvoich.length; z++){
+			if (dvoich[z] == '0'){
+				newstates.push(states[z-1]);
+			}
+		}
+		// console.log(newstates);
+		generated = deletestates(coml,newstates);
+		generated = "^start\nfinish^\n" + generated;
+		generated.replace(/' '+/g,'');
+		generatedauto = (new Automata()).fromText(generated);
+		var comlauto = (new Automata()).fromText(coml);
+//		console.log(generated);
+//		console.log(JSON.stringify(generated));
+		// console.log(JSON.stringify(coml));
+		// console.log(JSON.stringify(comlauto));
+		// console.log(JSON.stringify(generatedauto));
+//		console.log(JSON.stringify(dvoich + ' ' + equaldfas(comlauto,generatedauto)));
+		table = table.concat((dvoich.substr(1) + ' ' + equaldfas(comlauto,generatedauto) + '\n'));
+		newstates = [];
+	}
+	var lines = table.split('\n');
+	var d,i;
+	var newtable = '';
+	for(i = 0; i < lines.length; i++){
+		var cor = '';
+		for (d = 0; d < lines[i].length - 2; d++){
+			cor += lines[i].charAt(d) + ' & ';
+		}
+		cor += lines[i].charAt(lines[i].length - 1) + ' \\\\' + '\n';
+		newtable += cor;
+		cor = '';
+	}
+	console.log(table);
+	console.log(newtable);
+}
+
+
 window.Automata = Automata;
+
+window.equaldfas = equaldfas;
+
+window.table = table;
 
 })();
