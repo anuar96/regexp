@@ -483,7 +483,7 @@ window.TestDFA = function (s) {
 
 window.DFA = function (tree) {
     if (typeof(tree) == "string")
-        tree = new Tree(tree);
+        tree = new Tree(tree);  
     var dfa = createDFA(tree);
     dfa = minDFA(dfa);
     return dfa;
