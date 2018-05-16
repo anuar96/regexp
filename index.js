@@ -262,10 +262,18 @@ function renameStates(text){
             $("#automata_output")[0].value = renameStates(automam.minimizeAutomata());
             drawoutput();
         });
+        $("#button_waterloo").bind("click",function () {
+            var automam = (new Automata()).fromText($("#automata_input")[0].value);
+            $("#automata_input")[0].value = "^start\nfinish^\nstart,1\n1,6,a\n1,7,a\n1,8,a\n1,14,a\n2,8,a\n2,14,a\n3,8,a\n3,9,a\n3,10,a\n3,14,a\n4,10,a\n4,13,a\n5,10,a\n5,11,a" + 
+            "\n5,12,a\n5,13,a\n5,2,b\n5,3,b\n5,4,b\n6,4,a\n6,5,a\n6,12,b\n6,13,b\n7,4,a\n7,5,a\n7,12,b\n7,13,b\n8,4,a\n9,2,a\n9,3,a\n9,4,a\n9,6,b\n9,14,b\n10,2,a\n10,6,b\n10,14,b\n11,1,a\n11,2,a\n11,6,b\n11,14,b\n12,1,a\n12,2,a\n13,2,a\n14,4,a\n7,finish\n8,finish\n9,finish\n"
+            drawinput();
+            $("#automata_output")[0].value = table($("#automata_input")[0].value);
+
+            drawoutput();
+        });
         $("#button_getDFAbyNFA").bind("click",function () {
             var automam = (new Automata()).fromText($("#automata_input")[0].value);
             automam = automam.getDFAbyNFA();
-            console.log(automam);
             $("#automata_output")[0].value = automam;
           drawoutput();  
          });
@@ -277,7 +285,6 @@ function renameStates(text){
          });
          $("#button_equalDFAS").bind("click", function () {
             var automam = (new Automata()).fromText($("#automata_input")[0].value);
-            console.log(automam);
 //            var automam22 = (new Automata()).fromText($("#automata_output")[0].value);
             table($("#automata_input")[0].value);
 //            $("#regex_result")[0].value = equaldfas(automam,automam22)+"";
