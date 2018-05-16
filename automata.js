@@ -53,7 +53,6 @@ function removeSimpleNodes(nodesInfo) {
 	
 	for (var i = 0; i < deleted.length; i++)
 		delete nodesInfo[deleted[i]];
-	//console.log("Removed " + deleted.length + " nodes");
 }
 
 function eleminateNode(nodesInfo, name) {
@@ -381,9 +380,7 @@ Automata.prototype.analyze = function () {
 	};
 	
 	checkWay("#start");
-	//console.log(result);
 	var t = makeTree("#start");
-	//console.log(t+"");
 };
 
 Automata.prototype.toTree = function(level, callback, needDbg) {
@@ -531,9 +528,7 @@ Automata.prototype.toTree = function(level, callback, needDbg) {
 		
 		debug += "Method: heur, Total = " + total;
 	}
-	
-	//console.log(nodes.length, total);
-	//console.log(debug);
+
 	minTree = new Tree(minTree);
 	minTree.setAlphabet(this.getAlphabet());
 	return minTree;//.normalize();
@@ -627,8 +622,7 @@ Automata.prototype.fromText = function(text) {
 		}
 		this.addEdge(args[0], args[1], args[2]);
 	}
-//	this.setAlphabet(this.getAlphabet);
-//	console.log(JSON.stringify(this.alphabet));	
+
 	return this;
 };
 // Automata.prototype.fromText = function(text) {
@@ -715,9 +709,6 @@ Automata.prototype.reverseAutomata = function(){
 	return this;
 }
 Automata.prototype.minimizeAutomata = function(){
-//	this.reverseAutomata().getDFAbyNFA().myreverse().getDFAbyNFA();
-//	(new Automata()).fromText($("#automata_input")[0].value);
-//	console.log(this.reverseAutomata());
 	return (new Automata()).fromText(this.reverseAutomata().getDFAbyNFA()).reverseAutomata().getDFAbyNFA();
 }
 function renameStates(text){
@@ -912,44 +903,22 @@ function table(coml){
 	var newstates = [];
 	var dvoich,generated,generatedauto;
 	var table = '';
-//	var comlauto = (new Automata()).fromText(coml);
 	for (let i = 128; i < 256; i++){
 		dvoich = (i).toString(2);
-		// console.log(dvoich);
 		for (let z = 1; z < dvoich.length; z++){
 			if (dvoich[z] == '0'){
 				newstates.push(states[z-1]);
 			}
 		}
-		// console.log(newstates);
 		generated = deletestates(coml,newstates);
 		generated = "^start\nfinish^\n" + generated;
 		generated.replace(/' '+/g,'');
 		generatedauto = (new Automata()).fromText(generated);
 		var comlauto = (new Automata()).fromText(coml);
-//		console.log(generated);
-//		console.log(JSON.stringify(generated));
-		// console.log(JSON.stringify(coml));
-		// console.log(JSON.stringify(comlauto));
-		// console.log(JSON.stringify(generatedauto));
-//		console.log(JSON.stringify(dvoich + ' ' + equaldfas(comlauto,generatedauto)));
 		table = table.concat((dvoich.substr(1) + ' ' + equaldfas(comlauto,generatedauto) + '\n'));
 		newstates = [];
 	}
-	var lines = table.split('\n');
-	var d,i;
-	var newtable = '';
-	for(i = 0; i < lines.length; i++){
-		var cor = '';
-		for (d = 0; d < lines[i].length - 2; d++){
-			cor += lines[i].charAt(d) + ' & ';
-		}
-		cor += lines[i].charAt(lines[i].length - 1) + ' \\\\' + '\n';
-		newtable += cor;
-		cor = '';
-	}
-	console.log(table);
-	console.log(newtable);
+	return table
 }
 
 
